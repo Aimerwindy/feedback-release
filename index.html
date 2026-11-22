@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="format-detection" content="telephone=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#1F3864">
+<title>现场问题反馈</title>
+<style>
+  :root{
+    --navy:#1F3864; --bg:#F2F5F9; --card:#fff; --line:#E8ECF2;
+    --text:#1A2233; --sub:#6B7789; --hint:#A8B3C2; --field:#FAFBFC;
+    --red:#C62828; --ok:#1B7A3D;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",Arial,sans-serif;
+    font-size:16px;line-height:1.5;
+    padding-bottom:calc(96px + env(safe-area-inset-bottom));
+    -webkit-text-size-adjust:100%;
+  }
+  .wrap{max-width:680px;margin:0 auto;padding:0 14px;}
+
+  header{
+    background:#fff;padding:calc(14px + env(safe-area-inset-top)) 0 12px;
+    border-bottom:1px solid var(--line);
+  }
+  header h1{margin:0;font-size:19px;font-weight:600;color:var(--text);}
+  header p{margin:5px 0 0;font-size:12.5px;color:var(--hint);}
+  .hrow{display:flex;align-items:center;gap:14px;}
+  .hrow h1{flex:1;}
+  .hbtn{font-size:13px;color:var(--navy);padding:6px 2px;}
+
+  .card{background:var(--card);border-radius:14px;padding:14px;margin-top:10px;border:1px solid var(--line);}
+  .card h2{margin:0 0 10px;font-size:13px;color:var(--navy);font-weight:700;}
+  .field{margin-bottom:12px;}
+  .field:last-child{margin-bottom:0;}
+  .field label{display:block;font-size:13px;color:var(--sub);margin-bottom:5px;}
+  .field label .req{color:var(--red);margin-left:2px;font-weight:700;}
+
+  input[type=text],input[type=date],input[type=number],textarea,select{
+    width:100%;border:1px solid var(--line);background:var(--field);border-radius:10px;
+    padding:11px 12px;font-size:16px;color:var(--text);font-family:inherit;outline:none;
+    -webkit-appearance:none;appearance:none;
+  }
+  select{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8'><path d='M1 1l5 5 5-5' stroke='%236B7789' stroke-width='1.6' fill='none'/></svg>");
+    background-repeat:no-repeat;background-position:right 12px center;padding-right:34px;}
+  input:focus,textarea:focus,select:focus{border-color:var(--navy);background:#fff;}
+  textarea{min-height:92px;line-height:1.6;resize:vertical;}
+  input::placeholder,textarea::placeholder{color:#B6BFCC;}
+
+  .grid{display:grid;gap:10px;}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{
+    border:1px solid var(--line);background:var(--field);color:#4A5566;
+    border-radius:999px;padding:9px 14px;font-size:14px;
+  }
+  .chip.on{background:var(--navy);border-color:var(--navy);color:#fff;font-weight:600;}
+  .hint{font-size:12.5px;color:#7B8798;background:#F7F9FC;border-radius:8px;padding:8px 10px;margin-top:8px;display:none;}
+  .hint.show{display:block;}
+
+  .drop{
+    border:1.5px dashed #C9D4E3;border-radius:12px;background:var(--field);
+    padding:16px;text-align:center;color:#8B97A8;font-size:13.5px;
+  }
+  .drop b{color:var(--navy);font-weight:600;}
+  .thumbs{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+  .thumb{position:relative;width:72px;height:72px;border-radius:9px;overflow:hidden;border:1px solid var(--line);}
+  .thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+  .thumb .x{position:absolute;top:0;right:0;width:20px;height:20px;background:rgba(20,30,48,.75);
+    color:#fff;font-size:13px;line-height:20px;text-align:center;border-radius:0 0 0 8px;}
+  .vfile{display:flex;align-items:center;gap:10px;background:var(--field);border:1px solid var(--line);
+    border-radius:10px;padding:10px 12px;margin-top:8px;font-size:13px;}
+  .vfile .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .vfile .del{color:var(--red);font-size:12.5px;}
+
+  .bar{
+    position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);
+    padding:10px 14px calc(10px + env(safe-area-inset-bottom));
+  }
+  .bar .in{max-width:680px;margin:0 auto;display:flex;gap:10px;}
+  button{font-family:inherit;font-size:16px;border:none;border-radius:12px;padding:14px 16px;}
+  .btn-ghost{background:#EEF2F8;color:#44506A;}
+  .btn-main{flex:1;background:var(--navy);color:#fff;font-weight:600;}
+
+  .mask{position:fixed;inset:0;background:rgba(12,20,35,.5);display:none;align-items:flex-end;justify-content:center;z-index:50;}
+  .mask.show{display:flex;}
+  .sheet{
+    background:#fff;width:100%;max-width:680px;border-radius:18px 18px 0 0;
+    padding:18px 16px calc(16px + env(safe-area-inset-bottom));
+    max-height:88vh;overflow:auto;
+  }
+  .sheet h3{margin:0 0 4px;font-size:17px;color:var(--navy);}
+  .sheet .sub{font-size:12.5px;color:var(--sub);margin-bottom:12px;}
+  .sheet textarea{min-height:200px;font-size:13px;font-family:ui-monospace,Menlo,monospace;background:#F7F9FC;}
+  .acts{display:flex;gap:10px;margin-top:12px;}
+  .acts button{flex:1;font-size:15px;padding:13px 8px;}
+  .acts .pri{background:var(--navy);color:#fff;font-weight:600;}
+  .acts .sec{background:#EEF2F8;color:#44506A;}
+  .acts .ok{background:var(--ok);color:#fff;font-weight:600;}
+
+  .toast{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);
+    background:rgba(20,30,48,.93);color:#fff;padding:12px 20px;border-radius:12px;
+    font-size:14px;z-index:60;opacity:0;pointer-events:none;transition:.2s;max-width:80vw;text-align:center;}
+  .toast.show{opacity:1;}
+
+  .item{padding:12px 0;border-bottom:1px solid var(--line);}
+  .item:last-child{border-bottom:none;}
+  .item .t{font-size:15px;font-weight:600;}
+  .item .s{font-size:12px;color:var(--sub);margin-top:3px;}
+  .empty{color:var(--hint);text-align:center;padding:40px 0;font-size:14px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="hrow">
+      <h1>现场问题反馈</h1>
+      <span class="hbtn" id="btnHist">历史</span>
+      <span class="hbtn" id="btnClear">清空</span>
+    </div>
+    <p>填完点底部「打包并发送」，照片视频会自动压进一个包里</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="card">
+    <h2>现场信息</h2>
+    <div class="field">
+      <label>项目 / 客户<span class="req">*</span></label>
+      <input type="text" id="project">
+    </div>
+
+    <div class="field">
+      <label>设备名称<span class="req">*</span></label>
+      <select id="device"></select>
+    </div>
+
+    <div class="field" id="fDeviceManual" style="display:none">
+      <label>设备名称（手动填写）</label>
+      <input type="text" id="deviceManual">
+    </div>
+
+    <div class="field" id="fModel">
+      <label>设备型号<span class="req">*</span></label>
+      <select id="model"></select>
+    </div>
+
+    <div class="field" id="fModelManual" style="display:none">
+      <label>设备型号（手动填写）</label>
+      <input type="text" id="modelManual">
+    </div>
+
+    <div class="field">
+      <label>设备编号<span class="req">*</span></label>
+      <input type="text" id="sn">
+    </div>
+
+    <div class="field" id="fHead" style="display:none">
+      <label>喷头组件编号</label>
+      <input type="text" id="head">
+    </div>
+
+    <div class="grid" id="verGrid"></div>
+
+    <div class="grid" style="grid-template-columns:1fr 1fr;margin-top:12px">
+      <div class="field" style="margin:0">
+        <label>反馈人<span class="req">*</span></label>
+        <input type="text" id="who">
+      </div>
+      <div class="field" style="margin:0">
+        <label>反馈日期<span class="req">*</span></label>
+        <input type="date" id="day">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>问题是什么</h2>
+    <div class="field">
+      <label>问题类型（可多选）<span class="req">*</span></label>
+      <div class="chips" id="typeChips"></div>
+      <div class="hint" id="typeHint"></div>
+    </div>
+    <div class="field">
+      <label>影响程度<span class="req">*</span></label>
+      <div class="chips" id="levelChips"></div>
+    </div>
+    <div class="field">
+      <label>现象描述（只写看到什么，不写原因）<span class="req">*</span></label>
+      <textarea id="desc" placeholder="例：控制柜底板内侧 3 处锈斑，最大约 2×5cm，外层包装完好。"></textarea>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>照片 &nbsp;<span style="color:#A8B3C2;font-weight:400" id="pcount">0 / 9</span></h2>
+    <div class="drop" id="pickImg">点这里 <b>拍照或选照片</b><br><span style="font-size:12px">建议 2 张以上：全景 + 特写，会自动压缩</span></div>
+    <input type="file" id="imgFiles" accept="image/*" multiple style="display:none">
+    <div class="thumbs" id="thumbs"></div>
+  </div>
+
+  <div class="card">
+    <h2>视频 &nbsp;<span style="color:#A8B3C2;font-weight:400" id="vcount">0 / 3</span></h2>
+    <div class="drop" id="pickVid">点这里 <b>录一段或选视频</b>（照片说不清时才需要）<br><span style="font-size:12px">建议 30 秒内、720p</span></div>
+    <input type="file" id="vidFiles" accept="video/*" multiple style="display:none">
+    <div id="vidList"></div>
+  </div>
+
+  <div class="card">
+    <h2>其他（可留空）</h2>
+    <div class="grid" style="grid-template-columns:1fr 1fr">
+      <div class="field" style="margin:0">
+        <label>出厂日期<span style="color:#A8B3C2"> (可看设备铭牌)</span></label>
+        <input type="date" id="outday">
+      </div>
+      <div class="field" style="margin:0">
+        <label>现场开箱日期<span style="color:#A8B3C2"> (可问装机时间)</span></label>
+        <input type="date" id="openday">
+      </div>
+    </div>
+    <div class="field" style="margin-top:12px">
+      <label>已使用周期（可大概填）</label>
+      <div class="grid" style="grid-template-columns:1fr 1fr 1fr">
+        <input type="number" id="usedY" inputmode="numeric" placeholder="年">
+        <input type="number" id="usedM" inputmode="numeric" placeholder="月">
+        <input type="number" id="usedD" inputmode="numeric" placeholder="日">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>现场已采取的措施</label>
+      <textarea id="act" style="min-height:44px" placeholder="例：已临时补装、已改用备用件"></textarea>
+    </div>
+    <div class="field">
+      <label>备注 / 补充</label>
+      <textarea id="memo" style="min-height:44px" placeholder="客户有什么说法、是否影响其他工序"></textarea>
+    </div>
+  </div>
+
+  <p style="text-align:center;font-size:11.5px;color:#A8B3C2;padding:16px 0 6px">
+    打包在你的手机本地完成，不上传任何服务器
+  </p>
+  <p style="text-align:center;font-size:12px;padding:0 0 18px">
+    <span id="btnLog" style="color:#1F3864">更新记录</span>
+  </p>
+</div>
+
+<div class="bar">
+  <div class="in">
+    <button class="btn-ghost" id="btnText">复制文字</button>
+    <button class="btn-main" id="btnGo">打包并发送</button>
+  </div>
+</div>
+
+<div class="mask" id="mask">
+  <div class="sheet">
+    <h3 id="shTitle">打包完成</h3>
+    <div class="sub" id="shSub"></div>
+    <div id="shBody"></div>
+    <div class="acts" id="shActs"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var DEVICES = ["UV喷码机","视觉检测","贴标机","小字符","大字机","涂胶机","高解析","计数器","手动输入"];
+  var MODELS = [
+    ["Condor-ULG-9301","Condor-ULG-9501","Condor-ULG-9301FFB","Condor-ULG-9501FFB","Condor-ULG-9301ZFB","Condor-ULG-9501ZFB"],
+    ["Condor-H665","Condor-VIS"],
+    ["Condor-CDT-500/4C","Condor-CDT-500/6C","Condor-CDT-320"],
+    ["Condor-CD618PLUS","Condor-CD618"],
+    ["Condor-X6","Condor-Ⅱ"],
+    ["Condor-CA001"],
+    [],
+    [],
+    null
+  ];
+  // 版本字段：0上位机 1下位机 2FPGA 3软件 4摄像头 5作业形式 6供应型号
+  var VER_LABELS = ["上位机版本","下位机版本","FPGA版本","软件版本","摄像头编号/型号","作业形式","供应型号"];
+  var VER_FIELDS = [[0,1,2],[3,4],[3,5],[3,6],[3],[0,2],[3],[3],[0,1,2,3]];
+  var DEFAULT_VER = [0,1,2];
+  var WORK_MODES = ["IO作业模式","自动作业模式"];
+
+  var TYPES = ["缺件少件","外观与防护（锈蚀/划伤/受潮）","规格不符/装不上","软件与版本",
+               "喷头与墨路","电气与传感","资料与标识","现场条件/非我方"];
+  var TYPE_SHORT = ["缺件少件","外观防护","规格不符","软件版本","喷头墨路","电气传感","资料标识","现场条件"];
+  var TYPE_HINT = ["缺什么、规格型号、数量；装箱单上有没有这一项。",
+                   "哪个部位、面积或长度、什么程度；是否影响安装。",
+                   "实物型号 vs 图纸/BOM；差多少、差在哪里。",
+                   "版本号、操作步骤、能否复现、多久一次。",
+                   "喷头/墨路/过滤器/泵；什么现象；墨水批次。",
+                   "哪个传感器或哪根线；指示灯状态；实测值。",
+                   "文件版本 vs 实物；错在哪一页、哪个接口。",
+                   "客户电源/气源/场地实测值；是谁的责任。"];
+  var LEVELS = ["停线停机","阻塞安装","影响体验","轻微"];
+
+  var state = { typeSel:[], level:"", device:-1, model:"", imgs:[], vids:[], ver:["","","","","","",""] };
+  var MAX_IMG = 9, MAX_VID = 3;
+
+  function $(id){ return document.getElementById(id); }
+  function pad(n){ return n<10 ? "0"+n : ""+n; }
+  function today(){
+    var d = new Date();
+    return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+  }
+  function stamp(){
+    var d = new Date();
+    return ""+d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+"-"+pad(d.getHours())+pad(d.getMinutes());
+  }
+  function toast(msg, ms){
+    var t = $("toast"); t.textContent = msg; t.classList.add("show");
+    clearTimeout(t._h); t._h = setTimeout(function(){ t.classList.remove("show"); }, ms||1900);
+  }
+  function fmtSize(b){
+    if (b < 1024) return b+" B";
+    if (b < 1048576) return (b/1024).toFixed(0)+" KB";
+    return (b/1048576).toFixed(1)+" MB";
+  }
+  function safeName(s){
+    var t = (s||"").replace(/[\\/:*?"<>|\s]+/g,"");
+    if (!t) t = "现场";
+    return t.length > 20 ? t.slice(0,20) : t;
+  }
+
+  // ---------- 照片 / 视频 ----------
+  function compressImage(file, maxDim, q){
+    return new Promise(function(resolve){
+      var url = URL.createObjectURL(file);
+      var img = new Image();
+      img.onload = function(){
+        try{
+          var w = img.naturalWidth, h = img.naturalHeight;
+          var sc = Math.min(1, maxDim/Math.max(w,h));
+          var cw = Math.max(1, Math.round(w*sc)), ch = Math.max(1, Math.round(h*sc));
+          var cv = document.createElement("canvas");
+          cv.width = cw; cv.height = ch;
+          var ctx = cv.getContext("2d");
+          ctx.fillStyle = "#fff"; ctx.fillRect(0,0,cw,ch);
+          ctx.drawImage(img,0,0,cw,ch);
+          cv.toBlob(function(b){ URL.revokeObjectURL(url); resolve(b||file); }, "image/jpeg", q);
+        }catch(e){ URL.revokeObjectURL(url); resolve(file); }
+      };
+      img.onerror = function(){ URL.revokeObjectURL(url); resolve(file); };
+      img.src = url;
+    });
+  }
+
+  $("pickImg").onclick = function(){ $("imgFiles").click(); };
+  $("imgFiles").onchange = function(e){
+    var fs = Array.prototype.slice.call(e.target.files||[]);
+    var room = MAX_IMG - state.imgs.length;
+    if (fs.length > room) toast("最多 "+MAX_IMG+" 张照片");
+    fs.slice(0, room).forEach(function(f){
+      if (!/^image\//.test(f.type)) return;
+      var it = { id:"p"+Date.now()+Math.random().toString(36).slice(2,6), raw:f, blob:null, url:URL.createObjectURL(f) };
+      state.imgs.push(it);
+      renderImgs(); save();
+      compressImage(f, 1600, 0.82).then(function(b){ it.blob = b; renderImgs(); save(); });
+    });
+    e.target.value = "";
+  };
+
+  $("pickVid").onclick = function(){ $("vidFiles").click(); };
+  $("vidFiles").onchange = function(e){
+    var fs = Array.prototype.slice.call(e.target.files||[]);
+    var room = MAX_VID - state.vids.length;
+    if (fs.length > room) toast("最多 "+MAX_VID+" 段视频");
+    fs.slice(0, room).forEach(function(f){
+      if (!/^video\//.test(f.type)) return;
+      state.vids.push({ id:"v"+Date.now()+Math.random().toString(36).slice(2,6), file:f });
+      if (f.size > 50*1024*1024) toast("这段视频较大，打包会慢一些", 2600);
+    });
+    e.target.value = "";
+    renderVids(); save();
+  };
+
+  function renderImgs(){
+    var box = $("thumbs"); box.innerHTML = "";
+    state.imgs.forEach(function(it){
+      var d = document.createElement("div"); d.className = "thumb";
+      var im = document.createElement("img"); im.src = it.url;
+      var x = document.createElement("div"); x.className = "x"; x.textContent = "×";
+      x.onclick = function(){
+        state.imgs = state.imgs.filter(function(o){ return o.id !== it.id; });
+        renderImgs(); save();
+      };
+      d.appendChild(im); d.appendChild(x); box.appendChild(d);
+    });
+    $("pcount").textContent = state.imgs.length + " / " + MAX_IMG;
+  }
+
+  function renderVids(){
+    var box = $("vidList"); box.innerHTML = "";
+    state.vids.forEach(function(it, i){
+      var d = document.createElement("div"); d.className = "vfile";
+      var nm = document.createElement("div"); nm.className = "nm";
+      nm.textContent = "视频 " + (i+1) + " · " + fmtSize(it.file.size);
+      var del = document.createElement("div"); del.className = "del"; del.textContent = "删除";
+      del.onclick = function(){
+        state.vids = state.vids.filter(function(o){ return o.id !== it.id; });
+        renderVids(); save();
+      };
+      d.appendChild(nm); d.appendChild(del); box.appendChild(d);
+    });
+    $("vcount").textContent = state.vids.length + " / " + MAX_VID;
+  }
+
+  // ---------- 选项 ----------
+  function initSelects(){
+    var sd = $("device");
+    sd.innerHTML = '<option value="">请选择设备名称</option>' +
+      DEVICES.map(function(d,i){ return '<option value="'+i+'">'+d+'</option>'; }).join("");
+    sd.onchange = function(){
+      state.device = sd.value === "" ? -1 : parseInt(sd.value, 10);
+      state.model = "";
+      $("modelManual").value = "";
+      applyDevice();
+    };
+  }
+
+  function applyDevice(){
+    var idx = state.device;
+    $("fDeviceManual").style.display = (idx === 8) ? "" : "none";
+    $("fHead").style.display = (idx === 0) ? "" : "none";
+    // 先全部藏起来，再按设备类型打开，避免切换设备后残留
+    $("fModel").style.display = "none";
+    $("fModelManual").style.display = "none";
+
+    var list = idx < 0 ? [] : MODELS[idx];
+    if (idx < 0 || (list && list.length === 0)){
+      // 没选设备，或高解析/计数器：不显示型号
+    } else if (list === null){
+      $("fModelManual").style.display = "";
+    } else {
+      $("fModel").style.display = "";
+      $("fModelManual").style.display = "none";
+      var sm = $("model");
+      sm.innerHTML = '<option value="">请选择型号</option>' +
+        list.map(function(m){ return '<option value="'+m+'">'+m+'</option>'; }).join("");
+      sm.value = list.indexOf(state.model) >= 0 ? state.model : "";
+      sm.onchange = function(){ state.model = sm.value; save(); };
+    }
+    if (idx === 8) $("fModelManual").style.display = "";
+    rebuildVer();
+    save();
+  }
+
+  function rebuildVer(){
+    var grid = $("verGrid");
+    // 先把已填的值收回
+    collectVer();
+    grid.innerHTML = "";
+
+    var fields = (state.device < 0) ? DEFAULT_VER : VER_FIELDS[state.device];
+    var perRow = fields.length <= 3 ? fields.length : (fields.length === 4 ? 2 : 3);
+    if (perRow < 1) perRow = 1;
+    grid.style.gridTemplateColumns = "repeat(" + perRow + ", 1fr)";
+
+    fields.forEach(function(fi){
+      var box = document.createElement("div");
+      box.className = "field";
+      box.style.margin = "0";
+      var lb = document.createElement("label");
+      lb.textContent = VER_LABELS[fi];
+      box.appendChild(lb);
+
+      if (fi === 5){
+        var sel = document.createElement("select");
+        sel.innerHTML = '<option value="">请选择作业形式</option>' +
+          WORK_MODES.map(function(m){ return '<option value="'+m+'">'+m+'</option>'; }).join("");
+        sel.value = state.ver[5] || "";
+        sel.onchange = function(){ state.ver[5] = sel.value; save(); };
+        box.appendChild(sel);
+      } else {
+        var inp = document.createElement("input");
+        inp.type = "text";
+        inp.value = state.ver[fi] || "";
+        inp.oninput = function(){ state.ver[fi] = inp.value; save(); };
+        box.appendChild(inp);
+      }
+      grid.appendChild(box);
+    });
+  }
+
+  function collectVer(){
+    if (!state.ver) return;
+    // 值已经在 input 事件里同步，这里不用做额外处理
+  }
+
+  function initChips(){
+    var tc = $("typeChips");
+    TYPE_SHORT.forEach(function(t, i){
+      var c = document.createElement("div");
+      c.className = "chip"; c.textContent = t;
+      c.onclick = function(){
+        state.typeSel[i] = !state.typeSel[i];
+        if (state.typeSel[i]) state.lastType = i;
+        paintTypes();
+      };
+      tc.appendChild(c);
+    });
+    var lc = $("levelChips");
+    LEVELS.forEach(function(t){
+      var c = document.createElement("div");
+      c.className = "chip"; c.textContent = t;
+      c.onclick = function(){
+        state.level = (state.level === t) ? "" : t;
+        paintLevels();
+      };
+      lc.appendChild(c);
+    });
+  }
+
+  function paintTypes(){
+    var kids = $("typeChips").children;
+    for (var i = 0; i < kids.length; i++){
+      kids[i].className = "chip" + (state.typeSel[i] ? " on" : "");
+    }
+    var n = state.typeSel.filter(Boolean).length;
+    var h = $("typeHint");
+    if (n === 0){ h.className = "hint"; h.textContent = ""; }
+    else {
+      var li = state.lastType;
+      var txt = "已选 " + n + " 项";
+      if (li !== undefined && li !== null && state.typeSel[li]) txt += " · 最后一项提示：" + TYPE_HINT[li];
+      h.textContent = txt; h.className = "hint show";
+    }
+    save();
+  }
+
+  function paintLevels(){
+    var kids = $("levelChips").children;
+    for (var i = 0; i < kids.length; i++){
+      kids[i].className = "chip" + (kids[i].textContent === state.level ? " on" : "");
+    }
+    save();
+  }
+
+  // ---------- 取值 ----------
+  function deviceName(){
+    if (state.device < 0) return "";
+    if (state.device === 8) return $("deviceManual").value.trim();
+    return DEVICES[state.device];
+  }
+  function modelName(){
+    if (state.device < 0) return "";
+    var list = MODELS[state.device];
+    if (list && list.length === 0) return "";
+    if (list === null) return $("modelManual").value.trim();
+    return state.model;
+  }
+  function usedCycle(){
+    var y = parseInt($("usedY").value||"0",10)||0;
+    var m = parseInt($("usedM").value||"0",10)||0;
+    var d = parseInt($("usedD").value||"0",10)||0;
+    var t = "";
+    if (y>0) t += y + "年";
+    if (m>0) t += m + "个月";
+    if (d>0) t += d + "天";
+    return t;
+  }
+
+  function typeText(){
+    return state.typeSel.map(function(on,i){ return on ? TYPES[i] : null; })
+      .filter(Boolean).join("、");
+  }
+
+  // ---------- 草稿 ----------
+  var DKEY = "xcfk_web_v2";
+  function save(){
+    try{
+      var o = {
+        project:$("project").value, device:state.device, model:state.model,
+        deviceManual:$("deviceManual").value, modelManual:$("modelManual").value,
+        sn:$("sn").value, head:$("head").value, ver:state.ver,
+        who:$("who").value, day:$("day").value, desc:$("desc").value,
+        outday:$("outday").value, openday:$("openday").value,
+        usedY:$("usedY").value, usedM:$("usedM").value, usedD:$("usedD").value,
+        act:$("act").value, memo:$("memo").value,
+        typeSel:state.typeSel, level:state.level
+      };
+      localStorage.setItem(DKEY, JSON.stringify(o));
+    }catch(e){}
+  }
+
+  function load(){
+    var raw = null;
+    try{ raw = localStorage.getItem(DKEY); }catch(e){}
+    if (!raw) return;
+    var o;
+    try{ o = JSON.parse(raw); }catch(e){ return; }
+
+    $("project").value = o.project||"";
+    $("deviceManual").value = o.deviceManual||"";
+    $("modelManual").value = o.modelManual||"";
+    $("sn").value = o.sn||"";
+    $("head").value = o.head||"";
+    $("who").value = o.who||"";
+    $("day").value = o.day||today();
+    $("desc").value = o.desc||"";
+    $("outday").value = o.outday||"";
+    $("openday").value = o.openday||"";
+    $("usedY").value = o.usedY||"";
+    $("usedM").value = o.usedM||"";
+    $("usedD").value = o.usedD||"";
+    $("act").value = o.act||"";
+    $("memo").value = o.memo||"";
+
+    state.typeSel = o.typeSel || new Array(TYPES.length).fill(false);
+    state.level = o.level || "";
+    state.ver = o.ver || ["","","","","","",""];
+    state.device = (typeof o.device === "number") ? o.device : -1;
+    state.model = o.model || "";
+
+    $("device").value = state.device >= 0 ? String(state.device) : "";
+    applyDevice();
+    paintTypes(); paintLevels();
+  }
+
+  // ---------- ZIP（store 模式，已实测） ----------
+  var CRC_TABLE = (function(){
+    var t = new Uint32Array(256);
+    for (var n = 0; n < 256; n++){
+      var c = n;
+      for (var k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+      t[n] = c >>> 0;
+    }
+    return t;
+  })();
+  function crc32(u8){
+    var c = 0xFFFFFFFF;
+    for (var i = 0; i < u8.length; i++) c = CRC_TABLE[(c ^ u8[i]) & 0xFF] ^ (c >>> 8);
+    return (c ^ 0xFFFFFFFF) >>> 0;
+  }
+  function dosTime(d){
+    var tm = ((d.getHours()&31)<<11) | ((d.getMinutes()&63)<<5) | ((d.getSeconds()/2)|0);
+    var dt = (((d.getFullYear()-1980)&127)<<9) | (((d.getMonth()+1)&15)<<5) | (d.getDate()&31);
+    return [tm, dt];
+  }
+  function makeZip(files){
+    var now = new Date(), tt = dosTime(now);
+    var parts = [], central = [], offset = 0;
+    files.forEach(function(f){
+      var nb = new TextEncoder().encode(f.name);
+      var data = f.data, size = data.length;
+      var crc = crc32(data);
+
+      var lh = new Uint8Array(30 + nb.length);
+      var dv = new DataView(lh.buffer);
+      dv.setUint32(0, 0x04034b50, true); dv.setUint16(4, 20, true);
+      dv.setUint16(6, 0x0800, true); dv.setUint16(8, 0, true);
+      dv.setUint16(10, tt[0], true); dv.setUint16(12, tt[1], true);
+      dv.setUint32(14, crc, true); dv.setUint32(18, size, true); dv.setUint32(22, size, true);
+      dv.setUint16(26, nb.length, true); dv.setUint16(28, 0, true);
+      lh.set(nb, 30);
+      parts.push(lh, data);
+
+      var ch = new Uint8Array(46 + nb.length);
+      var dv2 = new DataView(ch.buffer);
+      dv2.setUint32(0, 0x02014b50, true); dv2.setUint16(4, 20, true);
+      dv2.setUint16(6, 20, true); dv2.setUint16(8, 0x0800, true); dv2.setUint16(10, 0, true);
+      dv2.setUint16(12, tt[0], true); dv2.setUint16(14, tt[1], true);
+      dv2.setUint32(16, crc, true); dv2.setUint32(20, size, true); dv2.setUint32(24, size, true);
+      dv2.setUint16(28, nb.length, true); dv2.setUint16(30, 0, true);
+      dv2.setUint16(32, 0, true); dv2.setUint16(34, 0, true); dv2.setUint16(36, 0, true);
+      dv2.setUint32(38, 0, true); dv2.setUint32(42, offset, true);
+      ch.set(nb, 46);
+      central.push(ch);
+      offset += lh.length + size;
+    });
+    var cdSize = central.reduce(function(a,b){ return a+b.length; }, 0);
+    var eocd = new Uint8Array(22);
+    var dv3 = new DataView(eocd.buffer);
+    dv3.setUint32(0, 0x06054b50, true);
+    dv3.setUint16(8, files.length, true); dv3.setUint16(10, files.length, true);
+    dv3.setUint32(12, cdSize, true); dv3.setUint32(16, offset, true);
+    return new Blob(parts.concat(central, [eocd]), { type:"application/zip" });
+  }
+
+  // ---------- 文本 ----------
+  function v(id){ return $(id).value.trim(); }
+
+  function buildText(){
+    var L = [];
+    L.push("现场问题反馈单");
+    L.push("提交时间：" + stamp());
+    L.push("--------------------------------");
+    L.push("项目/客户：" + v("project"));
+    L.push("设备名称：" + deviceName());
+    L.push("设备型号：" + modelName());
+    L.push("设备编号：" + v("sn"));
+    if (state.device === 0 && v("head")) L.push("喷头组件编号：" + v("head"));
+    L.push("反馈人：" + v("who"));
+    L.push("反馈日期：" + v("day"));
+    L.push("--------------------------------");
+    L.push("问题类型：" + typeText());
+    L.push("影响程度：" + state.level);
+    L.push("现象描述：" + v("desc"));
+    L.push("--------------------------------");
+    var fields = (state.device < 0) ? DEFAULT_VER : VER_FIELDS[state.device];
+    fields.forEach(function(fi){
+      if (state.ver[fi]) L.push(VER_LABELS[fi] + "：" + state.ver[fi]);
+    });
+    if (v("outday")) L.push("出厂日期：" + v("outday"));
+    if (v("openday")) L.push("现场开箱日期：" + v("openday"));
+    if (usedCycle()) L.push("已使用周期：" + usedCycle());
+    if (v("act")) L.push("已采取措施：" + v("act"));
+    if (v("memo")) L.push("备注：" + v("memo"));
+    L.push("--------------------------------");
+    L.push("附件：照片 " + state.imgs.length + " 张，视频 " + state.vids.length + " 段");
+    return L.join("\n");
+  }
+
+  function buildJson(){
+    var fields = (state.device < 0) ? DEFAULT_VER : VER_FIELDS[state.device];
+    var verObj = {};
+    fields.forEach(function(fi){ verObj[VER_LABELS[fi]] = state.ver[fi] || ""; });
+    return JSON.stringify({
+      submittedAt: new Date().toISOString(),
+      project: v("project"),
+      deviceName: deviceName(),
+      model: modelName(),
+      deviceNo: v("sn"),
+      printheadNo: (state.device === 0) ? v("head") : "",
+      issueTypes: state.typeSel.map(function(on,i){ return on ? TYPES[i] : null; }).filter(Boolean),
+      impact: state.level,
+      description: v("desc"),
+      versions: verObj,
+      factoryDate: v("outday"),
+      openDate: v("openday"),
+      usedCycle: usedCycle(),
+      actionTaken: v("act"),
+      memo: v("memo"),
+      reporter: v("who"),
+      reportDate: v("day"),
+      photoCount: state.imgs.length,
+      videoCount: state.vids.length,
+      source: "web"
+    }, null, 2);
+  }
+
+  // ---------- 校验 ----------
+  function missing(){
+    var m = [];
+    if (!v("project")) m.push("项目/客户");
+    if (!deviceName()) m.push("设备名称");
+    if (state.device >= 0 && MODELS[state.device] && MODELS[state.device].length > 0 && !modelName()) m.push("设备型号");
+    if (!v("sn")) m.push("设备编号");
+    if (state.typeSel.filter(Boolean).length === 0) m.push("问题类型");
+    if (!state.level) m.push("影响程度");
+    if (!v("desc")) m.push("现象描述");
+    if (state.imgs.length === 0 && state.vids.length === 0) m.push("照片或视频");
+    return m;
+  }
+
+  // ---------- 打包 ----------
+  function sheet(title, sub, bodyHtml, acts){
+    $("shTitle").textContent = title;
+    $("shSub").textContent = sub || "";
+    $("shBody").innerHTML = bodyHtml || "";
+    var a = $("shActs"); a.innerHTML = "";
+    (acts||[]).forEach(function(btn){
+      var b = document.createElement("button");
+      b.className = btn.cls || "sec";
+      b.textContent = btn.text;
+      b.onclick = btn.fn;
+      a.appendChild(b);
+    });
+    $("mask").classList.add("show");
+  }
+  function closeSheet(){ $("mask").classList.remove("show"); }
+
+  var lastFile = null;
+
+  function pack(){
+    sheet("正在打包…", "照片会先压缩，再和视频一起打包", "", []);
+    var enc = new TextEncoder();
+
+    setTimeout(async function(){
+      try{
+        // 确保照片都压好了
+        for (var i = 0; i < state.imgs.length; i++){
+          var it = state.imgs[i];
+          if (!it.blob) it.blob = await compressImage(it.raw, 1600, 0.82);
+        }
+        var files = [];
+        files.push({ name:"反馈单.txt", data: enc.encode(buildText()) });
+        files.push({ name:"record.json", data: enc.encode(buildJson()) });
+
+        for (var j = 0; j < state.imgs.length; j++){
+          var ab = await state.imgs[j].blob.arrayBuffer();
+          files.push({ name:"photo-" + pad(j+1) + ".jpg", data:new Uint8Array(ab) });
+        }
+        for (var k = 0; k < state.vids.length; k++){
+          var abv = await state.vids[k].file.arrayBuffer();
+          var ext = (state.vids[k].file.name.split(".").pop() || "mp4").toLowerCase();
+          if (!/^(mp4|mov|m4v|3gp|webm)$/.test(ext)) ext = "mp4";
+          files.push({ name:"video-" + pad(k+1) + "." + ext, data:new Uint8Array(abv) });
+        }
+
+        var blob = makeZip(files);
+        var fname = safeName(v("project")) + stamp().slice(0,8) + ".zip";
+        lastFile = new File([blob], fname, { type:"application/zip" });
+
+        var acts = [];
+        var canShare = false;
+        try { canShare = !!(navigator.canShare && navigator.canShare({ files:[lastFile] })); } catch(e){ canShare = false; }
+
+        if (canShare){
+          acts.push({ text:"发送到微信", cls:"ok", fn: function(){
+            navigator.share({ files:[lastFile], title:"现场问题反馈" }).catch(function(){});
+          }});
+        }
+        if (canShare){
+          acts.push({ text:"下载文件", cls:"pri", fn: function(){ download(lastFile); }});
+        } else {
+          acts.push({ text:"下载 zip", cls:"pri", fn: function(){ download(lastFile); }});
+        }
+        acts.push({ text:"关闭", cls:"sec", fn: closeSheet });
+
+        var tip = canShare
+          ? "点「发送到微信」，选联系人发送即可。<br>若分享面板没弹出，就点「下载文件」，到「文件」App 里长按分享给微信。"
+          : "这台设备不支持直接分享文件，点「下载 zip」保存后，在「文件」App 里长按 → 共享 → 微信。";
+
+        sheet("打包完成", fname + "　" + fmtSize(blob.size), '<div style="font-size:13px;color:#6B7789;line-height:1.7">' + tip + '</div>', acts);
+        saveHistory();
+      }catch(e){
+        sheet("打包失败", String(e && e.message || e), '<div style="font-size:13px;color:#C62828">视频太大的话，先删掉最大的一段再试。</div>',
+          [{ text:"知道了", cls:"pri", fn: closeSheet }]);
+      }
+    }, 60);
+  }
+
+  function download(file){
+    var url = URL.createObjectURL(file);
+    var a = document.createElement("a");
+    a.href = url; a.download = file.name;
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); }, 1500);
+    toast("已开始下载");
+  }
+
+  // ---------- 历史 ----------
+  var HKEY = "xcfk_hist_v2";
+  function saveHistory(){
+    try{
+      var arr = JSON.parse(localStorage.getItem(HKEY) || "[]");
+      arr.unshift({
+        t: Date.now(), project: v("project"), device: deviceName(), model: modelName(),
+        sn: v("sn"), types: typeText(), level: state.level, desc: v("desc"),
+        photos: state.imgs.length, videos: state.vids.length
+      });
+      localStorage.setItem(HKEY, JSON.stringify(arr.slice(0, 50)));
+    }catch(e){}
+  }
+
+  function showHistory(){
+    var arr = [];
+    try{ arr = JSON.parse(localStorage.getItem(HKEY) || "[]"); }catch(e){}
+    if (arr.length === 0){
+      sheet("历史记录", "", '<div class="empty">还没有提交记录</div>',
+        [{ text:"关闭", cls:"sec", fn: closeSheet }]);
+      return;
+    }
+    var html = "";
+    arr.forEach(function(r){
+      var d = new Date(r.t);
+      html += '<div class="item"><div class="t">' + (r.project || "（未填项目）") + '</div>' +
+        '<div class="s">' + d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate()) +
+        " " + pad(d.getHours()) + ":" + pad(d.getMinutes()) + "　" + (r.device||"") + " " + (r.model||"") + '</div>' +
+        '<div class="s" style="color:#A8B3C2">' + (r.types||"未选类型") + "　照片" + r.photos + "/视频" + r.videos + '</div></div>';
+    });
+    sheet("历史记录", "最近 50 条（只存文字，照片视频在已发送的 zip 里）", html,
+      [{ text:"关闭", cls:"sec", fn: closeSheet }]);
+  }
+
+  // ---------- 按钮 ----------
+  $("btnGo").onclick = function(){
+    var miss = missing();
+    if (miss.length > 0){
+      var html = '<div style="font-size:14px;line-height:1.9">还差 ' + miss.length + ' 项：<br><b>' +
+        miss.join("、") + '</b></div>' +
+        '<div style="font-size:12.5px;color:#6B7789;margin-top:10px">确实填不了的，可以跳过，缺项会写进记录里。</div>';
+      sheet("必填项未完成", "", html, [
+        { text:"跳过并发送", cls:"sec", fn: function(){ closeSheet(); pack(); } },
+        { text:"回去补", cls:"pri", fn: closeSheet }
+      ]);
+      return;
+    }
+    pack();
+  };
+
+  $("btnText").onclick = function(){
+    var t = buildText();
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(function(){ toast("已复制，去微信粘贴"); },
+        function(){ fallbackCopy(t); });
+    } else fallbackCopy(t);
+  };
+  function fallbackCopy(t){
+    var ta = document.createElement("textarea");
+    ta.value = t; ta.style.position = "fixed"; ta.style.top = "-1000px";
+    document.body.appendChild(ta); ta.select();
+    var ok = false;
+    try{ ok = document.execCommand("copy"); }catch(e){}
+    document.body.removeChild(ta);
+    toast(ok ? "已复制，去微信粘贴" : "复制失败，请长按选择");
+  }
+
+  $("btnClear").onclick = function(){
+    if (!confirm("清空当前填写的内容？（历史记录不受影响）")) return;
+    ["project","deviceManual","modelManual","sn","head","desc","outday","openday","usedY","usedM","usedD","act","memo"].forEach(function(id){
+      $(id).value = "";
+    });
+    $("day").value = today();
+    state.device = -1; state.model = "";
+    state.ver = ["","","","","","",""];
+    state.typeSel = new Array(TYPES.length).fill(false);
+    state.lastType = null;
+    state.level = "";
+    state.imgs = []; state.vids = [];
+    $("device").value = "";
+    renderImgs(); renderVids(); applyDevice(); paintTypes(); paintLevels();
+    save();
+    toast("已清空，可以填下一条");
+  };
+
+  $("btnHist").onclick = showHistory;
+  $("btnLog").onclick = showLog;
+
+
+  // ---------- 更新记录 ----------
+  var LOG = [
+    ["3.0","输入法弹出时底栏上抬，输入框滚到可见处","出厂/开箱日期加灰色提示"],
+    ["2.9","复制文字与包内 txt 完全一致","问题类型去掉数字编号","新增已使用周期（年/月/日）"],
+    ["2.8","日期选择器自绘，跟随主题色，支持快速换年"],
+    ["2.7","所有弹窗改为自绘：圆角、配色跟随主题色"],
+    ["2.6","更新地址隐藏，连点 logo 5 次显示","修复手动检查更新无反应"],
+    ["2.5","更新源改为 Gitee 优先，国内直连"],
+    ["2.4","设置页可自定义更新地址"],
+    ["2.3","更新源增加到 4 个"],
+    ["2.2","启动检查改为轻提示，已是最新不打扰"],
+    ["2.1","问题类型可多选；返回按钮加边框；检查失败不显示地址"],
+    ["2.0","主题明暗可调到纯黑"],
+    ["1.9","图片压缩参数优化"],
+    ["1.7","压缩包自动命名：项目客户名 + 日期"],
+    ["1.6","长按「打包并发送」可跳过必填项"],
+    ["1.5","历史缓存可按日期范围清理"],
+    ["1.4","主题色可调；历史记录；自动保存草稿"],
+    ["1.3","设备名称与型号联动；版本字段按设备区分"],
+    ["1.2","界面精简：去示例文字、顶部通栏、加入公司标识"],
+    ["1.1","修复微信收到后显示为 share_file.zip"],
+    ["1.0","首个版本：反馈表单、照片视频压缩打包、微信分享"]
+  ];
+
+  function showLog(){
+    var html = "";
+    LOG.forEach(function(e){
+      html += '<div class="item"><div class="t" style="color:#1F3864">v' + e[0] + '</div>';
+      for (var i = 1; i < e.length; i++){
+        html += '<div class="s" style="color:#4A5566">· ' + e[i] + '</div>';
+      }
+      html += '</div>';
+    });
+    sheet("更新记录", "从 1.0 开始", html, [{ text:"关闭", cls:"sec", fn: closeSheet }]);
+  }
+
+  // ---------- 启动 ----------
+  initSelects();
+  initChips();
+  $("day").value = today();
+  state.typeSel = new Array(TYPES.length).fill(false);
+  load();
+  paintTypes(); paintLevels();
+  applyDevice();
+})();
+</script>
+</body>
+</html>
